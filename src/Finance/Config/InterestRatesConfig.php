@@ -8,7 +8,7 @@ use Decimal\Decimal;
 
 class InterestRatesConfig
 {
-    private $_rates;
+    private $rates;
 
     public function __construct()
     {
@@ -17,10 +17,10 @@ class InterestRatesConfig
 
     private function setRates()
     {
-        $this->_rates = array();
-        $this->_rates[] = new InterestRateObject(new Decimal("0.5"), 0, 0);
-        $this->_rates[] = new InterestRateObject(new Decimal("0.93"), 1, 4999);
-        $this->_rates[] = new InterestRateObject(new Decimal("1.02"), 5000, 0);
+        $this->rates = array();
+        $this->rates[] = new InterestRateObject(new Decimal("0.5"), 0, 0);
+        $this->rates[] = new InterestRateObject(new Decimal("0.93"), 1, 4999);
+        $this->rates[] = new InterestRateObject(new Decimal("1.02"), 5000, 0);
     }
 
     /**
@@ -28,7 +28,7 @@ class InterestRatesConfig
      */
     public function getRates()
     {
-        return $this->_rates;
+        return $this->rates;
     }
 
 }
