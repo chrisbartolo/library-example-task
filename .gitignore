@@ -4,3 +4,4 @@ vendor/
 var/
 .conf/
 .phpunit.result.cache
+.phpdoc/
