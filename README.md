@@ -1,4 +1,4 @@
-#Finance - Interest Account Library
+# Finance - Interest Account Library
 
 Finance Interest Account Library provides you as the customer easy to use functions to manipulate your interest account. See the complete lis of methods below.
  
@@ -110,7 +110,7 @@ Future work would include:
 * simplify tests with re-usable set up code
 * simplify financeRequestApi object in Account class
 
-###Statement Endpoint
+### Statement Endpoint
 ```
 URL: /users/{uuid}/transactions
 METHOD: GET
@@ -118,14 +118,14 @@ PARAMS: sort=ASC|DESC
 RESPONSE: an array/list with transaction objects. Each transaction object has at least date_time, type, amount_in_pennies
 ```
 
-###Interest Rate GET Endpoint
+### Interest Rate GET Endpoint
 ```
 URL: /users/{uuid}/rate
 METHOD: GET
 RESPONSE: yearly_interest_rate DECIMAL
 ```
 
-###Interest Rate Update Endpoint
+### Interest Rate Update Endpoint
 ```
 URL: /users/{uuid}/rate
 METHOD: POST
@@ -133,7 +133,7 @@ PARAMS: rate DECIMAL
 RESPONSE: true|false
 ```
 
-###Deposit Endpoint:
+### Deposit Endpoint:
 ```
 URL: /users/{uuid}/deposit
 METHOD: POST
@@ -141,7 +141,7 @@ PARAMS: amount_in_pennies INT
 RESPONSE: true|false 
 ```
 
-###Set Skipped Payout Endpoint
+### Set Skipped Payout Endpoint
 ```
 URL: /users/{uuid}/skipped_payout
 METHOD: POST
@@ -149,7 +149,7 @@ PARAMS: amount_in_decimal DECIMAL
 RESPONSE: true|false
 ```
 
-###Get Skipped Payout Endpoint
+### Get Skipped Payout Endpoint
 ```
 URL: /users/{uuid}/skipped_payout
 METHOD: GET
@@ -164,7 +164,7 @@ PARAMS: reset BOOL
 RESPONSE: true|false
 ```
 
-###Store Transaction Endpoint
+### Store Transaction Endpoint
 ```
 URL: /users/{uuid}/transaction
 METHOD: POST
@@ -172,7 +172,7 @@ PARAMS: date_time DATE_TIME, concluded BOOL, uuid
 RESPONSE: true|false
 ```
 
-###Total Balance Endpoint
+### Total Balance Endpoint
 ```
 URL: /users/{uuid}/balance
 METHOD: GET
