@@ -1,0 +1,29 @@
+{
+  "name": "finance/interest-account",
+  "description": "Library to provide an interest account functionality to finance customers.",
+  "keywords": ["finance", "account", "savings", "psr-12"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Chris Bartolo",
+      "email": "chris@chrisbartolo.com"
+    }
+  ],
+  "type": "library",
+  "require": {
+    "php": "~7.4",
+    "guzzlehttp/guzzle": "^7.3",
+    "ext-json": "*",
+    "ext-decimal": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "9.5.*",
+    "mockery/mockery": "^1.4",
+    "phpunit/php-code-coverage": "^9.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "Finance\\IA\\": "src/Finance-IA"
+    }
+  }
+}
