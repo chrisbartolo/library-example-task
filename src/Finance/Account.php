@@ -6,6 +6,7 @@ use Exception;
 use Finance\IA\Config\ErrorCodes;
 use Finance\IA\Exception\AccountException;
 use Finance\IA\Exception\InterestException;
+use Finance\IA\Exception\UuidException;
 use Finance\IA\Object\ResultObject;
 use Finance\IA\Object\UserStatsObject;
 use Finance\IA\Object\UUIDv4Object;
@@ -39,8 +40,11 @@ class Account
         return $this->uuid;
     }
 
-    public function setUuid(UUIDv4Object $uuid)
+    private function setUuid(UUIDv4Object $uuid)
     {
+        if(isset($this->uuid)) {
+            throw new UuidException("Only one active user allowed.");
+        }
         $this->uuid = $uuid;
     }
 
