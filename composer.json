@@ -23,7 +23,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Finance\\IA\\": "src/Finance-IA"
+      "Finance\\IA\\": "src/Finance"
     }
   }
 }
