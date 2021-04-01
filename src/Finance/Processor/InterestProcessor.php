@@ -70,14 +70,17 @@ class InterestProcessor
         }
 
         if ($numberOfPayouts >= 1) {
-            $totalPayoutsAnnually = new Decimal(floor(365 / 3) . "");
-
-            $totalResult = $userStats->getInterestRate() / 100;
-            $totalResult = $totalResult * $userStats->getTotalBalance();
-            $totalResult = $totalResult / $totalPayoutsAnnually;
-            return new Decimal($totalResult . "");
+            return $this->compoundInterest($userStats->getTotalBalance(), (int) floor(365/3), $userStats->getInterestRate());
         }
         return new Decimal("0.0");
+    }
+
+    private function compoundInterest($principal, $periods, $interest): Decimal
+    {
+        $converted_interest = $interest / 100;
+        $completed_interest = $converted_interest + 1;
+        $exponent = pow($completed_interest, $periods);
+        return new Decimal("".$principal * $exponent);
     }
 
     /**
