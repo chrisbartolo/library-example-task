@@ -2,6 +2,7 @@
 
 namespace Finance\IA;
 
+use Exception;
 use Finance\IA\Config\ErrorCodes;
 use Finance\IA\Exception\AccountException;
 use Finance\IA\Exception\InterestException;
@@ -11,7 +12,7 @@ use Finance\IA\Object\UUIDv4Object;
 use Finance\IA\Processor\InterestAccountProcessor;
 use Finance\IA\Processor\InterestProcessor;
 use Finance\IA\Request\FinanceApiRequest;
-use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 
 /**
  * This is the main class that provides all the functionality needed to manipulate a Finance Interest Account.
@@ -20,33 +21,40 @@ use Exception;
 class Account
 {
 
-    private static UserStatsObject $userStats;
-    private static UUIDv4Object $uuid;
+    private UserStatsObject $userStats;
+    private UUIDv4Object $uuid;
     private InterestAccountProcessor $interestAccountProcessor;
 
     public function __construct(UUIDv4Object $uuid, FinanceApiRequest $financeApiRequest)
     {
-        self::setUuid($uuid);
+        $this->setUuid($uuid);
         $this->interestAccountProcessor = new InterestAccountProcessor($uuid, $financeApiRequest);
     }
 
-    public function getFinanceApiRequest(): FinanceApiRequest
+    /**
+     * @return UUIDv4Object
+     */
+    public function getUuid(): UUIDv4Object
     {
-        return $this->interestAccountProcessor->getFinanceApiRequest();
+        return $this->uuid;
+    }
+
+    public function setUuid(UUIDv4Object $uuid)
+    {
+        $this->uuid = $uuid;
     }
 
     /**
      * Not currently supported or offered.
      *
-     * @param int|null $income
      * @throws AccountException
      * @todo Add support for external creation of Interest Accounts by third parties
      */
-    public function createInterestAccount(int $income = null)
+    public function createInterestAccount()
     {
-        self::$userStats = $this->getFinanceApiRequest()->getUserStats();
+        $this->setUserStats($this->getFinanceApiRequest()->getUserStats());
 
-        if (self::$userStats != null) {
+        if ($this->getUserStats() != null) {
             throw new AccountException("Can't open account, user already has an active account.");
         }
 
@@ -54,67 +62,47 @@ class Account
         throw new Exception("Functionality not available");
     }
 
+    private function setUserStats(UserStatsObject $userStatsObject)
+    {
+        $this->userStats = $userStatsObject;
+    }
+
+    public function getFinanceApiRequest(): FinanceApiRequest
+    {
+        return $this->interestAccountProcessor->getFinanceApiRequest();
+    }
+
+    private function getUserStats(): UserStatsObject
+    {
+        return $this->userStats;
+    }
+
     /**
      * Open and activated a Finance Interest Account.
      * Once called, the interest rate assigned to the account is fetched from the API. If its not provided, we calculate the rate and assign it.
      * Only 1 open and active account is supported by this library.
      *
-     * @param int|null $income Amount of monthly income in pennies
      * @return ResultObject Standard object to easily process results
      */
-    public function openInterestAccount(int $income = null): ResultObject
+    public function openInterestAccount(): ResultObject
     {
         // initiate dependencies
         $resultObject = new ResultObject();
-
-        self::$userStats = $this->interestAccountProcessor->activateAccount(self::getUuid());
-
-        // we can only open an account if it exists
-        if (self::$userStats == null || !self::$userStats->isActive()) {
-            //throw new AccountException("Can't set account, user does not exist.");
-            $resultObject->setErrorCode(ErrorCodes::ACCOUNT_NOT_SET);
-            $resultObject->setSuccess(0);
-            $resultObject->setMessage("Unable to open user account");
-            return $resultObject;
+        $userStats = $this->interestAccountProcessor->activateAccount();
+        if(!$userStats->isActive())
+        {
+            return $resultObject->returnResult($resultObject::RESULT_ACCOUNT_NOT_ACTIVATED);
         }
+        $this->setUserStats($userStats);
 
         // an interest account needs a new rate, only if its the first time being opened; otherwise use the one already assigned
-        $interestRate = $this->interestAccountProcessor->getInterestRate();
-
-        // if its the first time we're assigning a rate, store it for future use
-        if ($interestRate == 0.0) {
-            $interestProcessor = new InterestProcessor();
-            try {
-                $interestRate = $interestProcessor->selectRate(self::$userStats->getMonthlyIncome());
-                $this->getFinanceApiRequest()->setInterestRate($interestRate);
-            } catch (InterestException $message) {
-                $resultObject->setErrorCode(ErrorCodes::INTEREST_ASSIGN);
-                $resultObject->setMessage($message);
-                $resultObject->setSuccess(0);
-                return $resultObject;
-            }
+        $resultObject = $this->interestAccountProcessor->getInterestRate();
+        if (!$resultObject->success) {
+            return $resultObject;
         }
+        $this->getUserStats()->setInterestRate($resultObject->data['rate']);
 
-        $this::$userStats->setInterestRate($interestRate);
-
-        //Set the result object with success
-        $resultObject->setMessage("Interest Account is opened and active");
-        $resultObject->setErrorCode(ErrorCodes::NONE);
-        $resultObject->setSuccess(1);
-        return $resultObject;
-    }
-
-    /**
-     * @return UUIDv4Object
-     */
-    public static function getUuid(): UUIDv4Object
-    {
-        return self::$uuid;
-    }
-
-    public static function setUuid(UUIDv4Object $uuid)
-    {
-        self::$uuid = $uuid;
+        return $resultObject->returnResult(ResultObject::RESULT_OPENED_AND_ACTIVE);
     }
 
     /**
@@ -125,13 +113,13 @@ class Account
     {
         // initiate dependencies
         $resultObject = new ResultObject();
-
-        if ($this::$userStats != null || !$this::$userStats->isActive()) {
-            $resultObject->setErrorCode(ErrorCodes::ACCOUNT_NOT_SET);
-            $resultObject->setSuccess(0);
-            $resultObject->setMessage("No user account is currently open");
-            return $resultObject;
+        $userStats = $this->interestAccountProcessor->activateAccount();
+        if(!$userStats->isActive())
+        {
+            return $resultObject->returnResult($resultObject::RESULT_ACCOUNT_NOT_ACTIVATED);
         }
+        $this->setUserStats($userStats);
+        $resultObject->clearResult();
 
         $this->getFinanceApiRequest()->getUserStatement();
         return $resultObject;
@@ -142,33 +130,30 @@ class Account
      *
      * @param int $deposit_amount amount to deposit in pennies
      * @return ResultObject Standard object to easily process results
+     * @throws Exception
      */
     public function depositFunds(int $deposit_amount): ResultObject
     {
         // initiate dependencies
         $resultObject = new ResultObject();
-
-        if (self::$userStats == null || !self::$userStats->isActive()) {
-            $resultObject->setErrorCode(ErrorCodes::ACCOUNT_NOT_SET);
-            $resultObject->setSuccess(0);
-            $resultObject->setMessage("No user account is currently open");
-            return $resultObject;
+        $userStats = $this->interestAccountProcessor->activateAccount();
+        if(!$userStats->isActive())
+        {
+            return $resultObject->returnResult($resultObject::RESULT_ACCOUNT_NOT_ACTIVATED);
         }
+        $this->setUserStats($userStats);
+        $resultObject->clearResult();
 
         if ($deposit_amount < 1) {
-            $resultObject->setErrorCode(ErrorCodes::DEPOSIT_INVALID);
-            $resultObject->setSuccess(0);
-            $resultObject->setMessage("Deposit amount must be more than 0");
-            return $resultObject;
+            return $resultObject->returnResult(ResultObject::RESULT_DEPOSIT_AMOUNT_MIN_LIMIT);
         }
 
-
         $totalBalance = $this->getFinanceApiRequest()->depositIntoAccount($deposit_amount);
-        if($totalBalance == false) {
+        if ($totalBalance == false) {
             throw new Exception("Deposit funds fatal error. Contact support");
         }
 
-        self::$userStats->setTotalBalance($totalBalance);
+        $this->getUserStats()->setTotalBalance($totalBalance);
 
         $resultObject->setSuccess(1);
         $resultObject->setErrorCode(ErrorCodes::NONE);
@@ -185,46 +170,35 @@ class Account
      * Calculate how much needs to be paid out in interest rate, including previously skipped values.
      *
      * @return ResultObject
+     * @throws GuzzleException
      */
     public function payout(): ResultObject
     {
         // initiate dependencies
         $resultObject = new ResultObject();
-
-        if (self::$userStats == null || !self::$userStats->isActive()) {
-            $resultObject->setErrorCode(ErrorCodes::ACCOUNT_NOT_SET);
-            $resultObject->setSuccess(0);
-            $resultObject->setMessage("No user account is currently open");
-            return $resultObject;
+        $userStats = $this->interestAccountProcessor->activateAccount();
+        if(!$userStats->isActive())
+        {
+            return $resultObject->returnResult($resultObject::RESULT_ACCOUNT_NOT_ACTIVATED);
         }
+        $this->setUserStats($userStats);
+        $this->userStats->fetchData($this->getFinanceApiRequest());
+        $resultObject->clearResult();
 
         $interestProcessor = new InterestProcessor();
 
-        self::$userStats->setLastPayoutDate($this->getFinanceApiRequest()->getLastPayout());
-        self::$userStats->setInterestRate($this->getFinanceApiRequest()->getInterestRate());
-        self::$userStats->setTotalBalance($this->getFinanceApiRequest()->getTotalBalance());
-
-
-        if ($interestProcessor->calculatePayoutCount(self::$userStats) == 0) {
-            $resultObject->setErrorCode(ErrorCodes::NONE);
-            $resultObject->setSuccess(1);
-            $resultObject->setMessage("No payout due.");
-            return $resultObject;
+        if ($interestProcessor->calculatePayoutCount($this->getUserStats()) == 0) {
+            return $resultObject->returnResult($resultObject::RESULT_PAYOUT_COUNT_FAILED);
         }
 
         try {
-            $interestValue = $interestProcessor->calculateInterest(self::$userStats);
+            $interestValue = $interestProcessor->calculateInterest($this->getUserStats());
         } catch (InterestException $e) {
-            $resultObject->setErrorCode(ErrorCodes::INTEREST_ASSIGN);
-            $resultObject->setSuccess(0);
-            $resultObject->setMessage("Interest calculation error");
-            return $resultObject;
+            return $resultObject->returnResult($resultObject::RESULT_INTEREST_FAILED);
         }
+
         if ($interestValue == 0.00) {
-            $resultObject->setErrorCode(ErrorCodes::NONE);
-            $resultObject->setSuccess(1);
-            $resultObject->setMessage("No interest has been accumulated.");
-            return $resultObject;
+            return $resultObject->returnResult($resultObject::RESULT_INTEREST_ZERO);
         }
 
         $totalInterestToPayout = $interestValue + $this->getFinanceApiRequest()->getSkippedPayouts();
@@ -232,17 +206,12 @@ class Account
             $this->getFinanceApiRequest()->setSkippedPayout($interestValue);
             $this->getFinanceApiRequest()->storeTransaction();
 
-            $resultObject->setErrorCode(ErrorCodes::NONE);
-            $resultObject->setSuccess(1);
-            $resultObject->setMessage(
-                "Interest accumulated is less than 1 penny. It will be included in the next payout which totals to at least 1 penny."
-            );
-            return $resultObject;
+            return $resultObject->returnResult(ResultObject::RESULT_DEPOSIT_PAYOUT_LESS_MINIMUM);
         }
 
         $totalPayoutToSkip = $totalInterestToPayout - intval($totalInterestToPayout);
 
-        self::$userStats->setTotalBalance(
+        $this->getUserStats()->setTotalBalance(
             $this->getFinanceApiRequest()->depositIntoAccount(intval($totalInterestToPayout))
         );
         $this->getFinanceApiRequest()->resetSkippedPayouts();
@@ -257,7 +226,7 @@ class Account
         $resultObject->setMessage("Interest has been successfully paid out.");
         $resultObject->setData(
             [
-                "totalBalance" => self::$userStats->getTotalBalance(),
+                "totalBalance" => $this->getUserStats()->getTotalBalance(),
                 "totalPaid" => $totalInterestToPayout,
                 "skippedPayout" => $totalPayoutToSkip
             ]

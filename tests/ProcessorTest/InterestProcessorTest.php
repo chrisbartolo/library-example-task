@@ -1,8 +1,9 @@
 <?php
+
 namespace Finance\IA\Test\ProcessorTest;
 
-use Finance\IA\Object\UserStatsObject;
 use Decimal\Decimal;
+use Finance\IA\Object\UserStatsObject;
 use PHPUnit\Framework\TestCase;
 
 final class InterestProcessorTest extends TestCase
@@ -73,12 +74,12 @@ final class InterestProcessorTest extends TestCase
         $userStatsObject->setInterestRate(new Decimal("0.93"));
         $userStatsObject->setTotalBalance("6000");
 
-        $totalPayoutsAnnually = new Decimal(floor(365 / 3)."");
+        $totalPayoutsAnnually = new Decimal(floor(365 / 3) . "");
 
         $totalResult = $userStatsObject->getInterestRate() / 100;
         $totalResult = $totalResult * $userStatsObject->getTotalBalance();
         $totalResult = $totalResult / $totalPayoutsAnnually;
 
-        $this->assertEquals(new Decimal($totalResult.""), $interestProcessor->calculateInterest($userStatsObject));
+        $this->assertEquals(new Decimal($totalResult . ""), $interestProcessor->calculateInterest($userStatsObject));
     }
 }

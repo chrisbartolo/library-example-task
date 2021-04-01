@@ -2,11 +2,11 @@
 
 namespace Finance\IA\Processor;
 
+use Decimal\Decimal;
 use Finance\IA\Config\InterestIntervalConfig;
 use Finance\IA\Config\InterestRatesConfig;
 use Finance\IA\Exception\InterestException;
 use Finance\IA\Object\UserStatsObject;
-use Decimal\Decimal;
 
 
 /**
@@ -15,7 +15,6 @@ use Decimal\Decimal;
  */
 class InterestProcessor
 {
-
     private array $interest_rates;
 
     public function __construct()
@@ -92,7 +91,6 @@ class InterestProcessor
         $daysToPayout = $userStats->getDaysFromLastPayout();
         return floor($daysToPayout / InterestIntervalConfig::PAYOUT_INTERVAL_DAYS);
     }
-
 }
 
 ?>

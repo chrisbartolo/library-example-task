@@ -1,4 +1,5 @@
 <?php
+
 namespace Finance\IA\Test\ObjectTest;
 
 use PHPUnit\Framework\TestCase;

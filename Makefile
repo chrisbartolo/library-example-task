@@ -1,7 +1,7 @@
 install-local:
 	composer install
 
-build-docker:
+build:
 	docker build -t finance-ia .
 
 test:

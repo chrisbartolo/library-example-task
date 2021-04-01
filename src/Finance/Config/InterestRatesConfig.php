@@ -2,8 +2,8 @@
 
 namespace Finance\IA\Config;
 
-use Finance\IA\Object\InterestRateObject;
 use Decimal\Decimal;
+use Finance\IA\Object\InterestRateObject;
 
 
 class InterestRatesConfig

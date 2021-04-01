@@ -4,6 +4,7 @@ namespace Finance\IA\Object;
 
 use DateTime;
 use Decimal\Decimal;
+use Finance\IA\Request\FinanceApiRequest;
 
 /**
  * User Stats as an object for easy re-use between classes and methods
@@ -149,6 +150,13 @@ class UserStatsObject
     public function isActive(): bool
     {
         return $this->active;
+    }
+
+    public function fetchData(FinanceApiRequest $financeApiRequest)
+    {
+        $this->setLastPayoutDate($financeApiRequest->getLastPayout());
+        $this->setInterestRate($financeApiRequest->getInterestRate());
+        $this->setTotalBalance($financeApiRequest->getTotalBalance());
     }
 }
 

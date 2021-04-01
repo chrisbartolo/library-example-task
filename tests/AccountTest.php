@@ -2,8 +2,8 @@
 
 namespace Finance\IA\Test;
 
-use Finance\IA\Config\ErrorCodes;
 use Decimal\Decimal;
+use Finance\IA\Config\ErrorCodes;
 use PHPUnit\Framework\TestCase;
 
 final class AccountTest extends TestCase
@@ -44,10 +44,10 @@ final class AccountTest extends TestCase
 
 
         $account = new \Finance\IA\Account($UUID, $financeApiRequest);
-        $result = $account->openInterestAccount("1200");
+        $result = $account->openInterestAccount();
 
         $this->assertFalse($result->success);
-        $this->assertEquals(\Finance\IA\Config\ErrorCodes::ACCOUNT_NOT_SET, $result->error_code);
+        $this->assertEquals(\Finance\IA\Config\ErrorCodes::ACCOUNT_NOT_SET, $result->errorCode);
         $this->assertEquals("Unable to open user account", $result->message);
     }
 
@@ -70,10 +70,10 @@ final class AccountTest extends TestCase
 
 
         $account = new \Finance\IA\Account($UUID, $financeApiRequest);
-        $result = $account->openInterestAccount("1200");
+        $result = $account->openInterestAccount();
 
         $this->assertTrue($result->success);
-        $this->assertEquals(\Finance\IA\Config\ErrorCodes::NONE, $result->error_code);
+        $this->assertEquals(\Finance\IA\Config\ErrorCodes::NONE, $result->errorCode);
         $this->assertEquals("Interest Account is opened and active", $result->message);
     }
 
@@ -98,22 +98,22 @@ final class AccountTest extends TestCase
 
 
         $account = new \Finance\IA\Account($UUID, $financeApiRequest);
-        $result = $account->openInterestAccount("1200");
+        $result = $account->openInterestAccount();
 
         $result = $account->depositFunds("0.8");
         $this->assertFalse($result->success);
-        $this->assertEquals(\Finance\IA\Config\ErrorCodes::DEPOSIT_INVALID, $result->error_code);
+        $this->assertEquals(\Finance\IA\Config\ErrorCodes::DEPOSIT_INVALID, $result->errorCode);
         $this->assertEquals("Deposit amount must be more than 0", $result->message);
 
         $result = $account->depositFunds("50");
         $this->assertTrue($result->success);
-        $this->assertEquals(\Finance\IA\Config\ErrorCodes::NONE, $result->error_code);
+        $this->assertEquals(\Finance\IA\Config\ErrorCodes::NONE, $result->errorCode);
         $this->assertEquals("Funds have been successfully deposited", $result->message);
         $this->assertEquals("50050", $result->data['totalBalance']);
 
         $result = $account->depositFunds("50");
         $this->assertTrue($result->success);
-        $this->assertEquals(\Finance\IA\Config\ErrorCodes::NONE, $result->error_code);
+        $this->assertEquals(\Finance\IA\Config\ErrorCodes::NONE, $result->errorCode);
         $this->assertEquals("Funds have been successfully deposited", $result->message);
         $this->assertEquals("50100", $result->data['totalBalance']);
     }
@@ -167,30 +167,30 @@ final class AccountTest extends TestCase
 
 
         $account = new \Finance\IA\Account($UUID, $financeApiRequest);
-        $result = $account->openInterestAccount("600000");
+        $result = $account->openInterestAccount();
 
         // same day
         $result = $account->payout();
         $this->assertTrue($result->success);
-        $this->assertEquals(ErrorCodes::NONE, $result->error_code);
+        $this->assertEquals(ErrorCodes::NONE, $result->errorCode);
         $this->assertEquals("No payout due.", $result->message);
 
         // 1 day
         $result = $account->payout();
         $this->assertTrue($result->success);
-        $this->assertEquals(ErrorCodes::NONE, $result->error_code);
+        $this->assertEquals(ErrorCodes::NONE, $result->errorCode);
         $this->assertEquals("No payout due.", $result->message);
 
         // 3 days
         $result = $account->payout();
         $this->assertTrue($result->success);
-        $this->assertEquals(ErrorCodes::NONE, $result->error_code);
+        $this->assertEquals(ErrorCodes::NONE, $result->errorCode);
         $this->assertEquals("Interest has been successfully paid out.", $result->message);
 
         // 6 days
         $result = $account->payout();
         $this->assertFalse($result->success);
-        $this->assertEquals(ErrorCodes::INTEREST_ASSIGN, $result->error_code);
+        $this->assertEquals(ErrorCodes::INTEREST_ASSIGN, $result->errorCode);
         $this->assertEquals("Interest calculation error", $result->message);
     }
 
@@ -253,44 +253,44 @@ final class AccountTest extends TestCase
 
 
         $account = new \Finance\IA\Account($UUID, $financeApiRequest);
-        $result = $account->openInterestAccount("600000");
+        $result = $account->openInterestAccount();
 
         // same day
         $result = $account->payout();
         $this->assertTrue($result->success);
-        $this->assertEquals(ErrorCodes::NONE, $result->error_code);
+        $this->assertEquals(ErrorCodes::NONE, $result->errorCode);
         $this->assertEquals("No payout due.", $result->message);
 
         // 3 days
-        $payout1 = 2000000 + ( 2000000 * (1.02/100) ) / ( 365/3);
+        $payout1 = 2000000 + (2000000 * (1.02 / 100)) / (365 / 3);
         $result = $account->payout();
         $this->assertTrue($result->success);
-        $this->assertEquals(ErrorCodes::NONE, $result->error_code);
+        $this->assertEquals(ErrorCodes::NONE, $result->errorCode);
         $this->assertEquals("Interest has been successfully paid out.", $result->message);
         $this->assertEquals(floor($payout1), $result->data['totalBalance']);
         $payoutCheck = round($payout1 - floor($payout1), 3);
-        $this->assertEquals(new Decimal($payoutCheck."", 3), new Decimal($result->data['skippedPayout'], 3));
+        $this->assertEquals(new Decimal($payoutCheck . "", 3), new Decimal($result->data['skippedPayout'], 3));
 
 
         // 6 days
-        $payout2 = $payout1 + ( $payout1 * (1.02/100) ) / ( 365/3);
+        $payout2 = $payout1 + ($payout1 * (1.02 / 100)) / (365 / 3);
         $result = $account->payout();
         $this->assertTrue($result->success);
-        $this->assertEquals(ErrorCodes::NONE, $result->error_code);
+        $this->assertEquals(ErrorCodes::NONE, $result->errorCode);
         $this->assertEquals("Interest has been successfully paid out.", $result->message);
-        $this->assertEquals(round($payout2,0), round($result->data['totalBalance'],0));
+        $this->assertEquals(round($payout2, 0), round($result->data['totalBalance'], 0));
         $payoutCheck = round($payout2 - floor($payout2), 3);
-        $this->assertEquals(new Decimal($payoutCheck."", 3), new Decimal($result->data['skippedPayout'], 3));
+        $this->assertEquals(new Decimal($payoutCheck . "", 3), new Decimal($result->data['skippedPayout'], 3));
 
 
         // 9 days
-        $payout3 = $payout2 + ( $payout2 * (1.02/100) ) / ( 365/3);
+        $payout3 = $payout2 + ($payout2 * (1.02 / 100)) / (365 / 3);
         $result = $account->payout();
         $this->assertTrue($result->success);
-        $this->assertEquals(ErrorCodes::NONE, $result->error_code);
+        $this->assertEquals(ErrorCodes::NONE, $result->errorCode);
         $this->assertEquals("Interest has been successfully paid out.", $result->message);
-        $this->assertEquals(round($payout3,0), round($result->data['totalBalance'],0));
+        $this->assertEquals(round($payout3, 0), round($result->data['totalBalance'], 0));
         $payoutCheck = round($payout3 - floor($payout3), 3);
-        $this->assertEquals(new Decimal($payoutCheck."", 3), new Decimal($result->data['skippedPayout'], 3));
+        $this->assertEquals(new Decimal($payoutCheck . "", 3), new Decimal($result->data['skippedPayout'], 3));
     }
 }

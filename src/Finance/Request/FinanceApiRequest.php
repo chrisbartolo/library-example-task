@@ -2,12 +2,12 @@
 
 namespace Finance\IA\Request;
 
+use DateTime;
+use Decimal\Decimal;
 use Finance\IA\Exception\InterestException;
 use Finance\IA\Exception\UuidException;
 use Finance\IA\Object\UserStatsObject;
 use Finance\IA\Object\UUIDv4Object;
-use DateTime;
-use Decimal\Decimal;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 

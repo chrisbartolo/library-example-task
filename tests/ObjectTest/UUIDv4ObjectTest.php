@@ -1,4 +1,5 @@
 <?php
+
 namespace Finance\IA\Test\ObjectTest;
 
 use Finance\IA\Exception\UuidException;

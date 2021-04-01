@@ -1,7 +1,12 @@
 {
   "name": "finance/interest-account",
   "description": "Library to provide an interest account functionality to finance customers.",
-  "keywords": ["finance", "account", "savings", "psr-12"],
+  "keywords": [
+    "finance",
+    "account",
+    "savings",
+    "psr-12"
+  ],
   "license": "MIT",
   "authors": [
     {
